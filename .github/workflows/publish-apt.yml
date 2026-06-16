@@ -36,8 +36,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            debhelper dh-python python3-all python3-setuptools python3-yaml \
-            dpkg-dev apt-utils
+            build-essential debhelper dh-python python3-all python3-setuptools \
+            python3-yaml dpkg-dev apt-utils
 
       - name: Build .deb
         run: dpkg-buildpackage -us -uc -b
