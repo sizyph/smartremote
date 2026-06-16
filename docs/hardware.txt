@@ -1,0 +1,178 @@
+H/W path        Device          Class          Description
+==========================================================
+                                system         B760 Pro RS (To Be Filled By O.E.M.)
+/0                              bus            B760 Pro RS
+/0/0                            memory         64KiB BIOS
+/0/f                            memory         96GiB System Memory
+/0/f/0                          memory         DIMM [empty]
+/0/f/1                          memory         48GiB DIMM Synchronous 5600 MHz (0.2 ns)
+/0/f/2                          memory         DIMM [empty]
+/0/f/3                          memory         48GiB DIMM Synchronous 5600 MHz (0.2 ns)
+/0/1f                           memory         384KiB L1 cache
+/0/20                           memory         256KiB L1 cache
+/0/21                           memory         16MiB L2 cache
+/0/22                           memory         30MiB L3 cache
+/0/23                           memory         256KiB L1 cache
+/0/24                           memory         512KiB L1 cache
+/0/25                           memory         8MiB L2 cache
+/0/26                           memory         30MiB L3 cache
+/0/27                           processor      13th Gen Intel(R) Core(TM) i7-13700
+/0/100                          bridge         Intel Corporation
+/0/100/1                        bridge         Intel Corporation
+/0/100/1/0      /dev/fb0        display        AD102 [GeForce RTX 4090]
+/0/100/1/0.1    card1           multimedia     AD102 High Definition Audio Controller
+/0/100/1/0.1/0  input10         input          HDA NVidia HDMI/DP,pcm=9
+/0/100/1/0.1/1  input7          input          HDA NVidia HDMI/DP,pcm=3
+/0/100/1/0.1/2  input8          input          HDA NVidia HDMI/DP,pcm=7
+/0/100/1/0.1/3  input9          input          HDA NVidia HDMI/DP,pcm=8
+/0/100/6                        bridge         Raptor Lake PCIe 4.0 Graphics Port
+/0/100/6/0      /dev/nvme0      storage        SOLIDIGM SSDPFKKW010X7
+/0/100/6/0/0    hwmon1          disk           NVMe disk
+/0/100/6/0/2    /dev/ng0n1      disk           NVMe disk
+/0/100/6/0/1    /dev/nvme0n1    disk           1024GB NVMe disk
+/0/100/6/0/1/1                  volume         1074MiB Windows FAT volume
+/0/100/6/0/1/2  /dev/nvme0n1p2  volume         952GiB EXT4 volume
+/0/100/14                       bus            Raptor Lake USB 3.2 Gen 2x2 (20 Gb/s) XHCI Host Controller
+/0/100/14/0     usb1            bus            xHCI Host Controller
+/0/100/14/0/4                   bus            ASM107x
+/0/100/14/0/7   input3          input          Dell KB216 Wired Keyboard Consumer Control
+/0/100/14/0/b                   input          LED Controller
+/0/100/14/1     usb2            bus            xHCI Host Controller
+/0/100/14/1/4                   bus            ASM107x
+/0/100/14.2                     memory         RAM memory
+/0/100/15                       bus            Raptor Lake Serial IO I2C Host Controller #0
+/0/100/16                       communication  Raptor Lake CSME HECI #1
+/0/100/17                       storage        Raptor Lake SATA AHCI Controller
+/0/100/1c                       bridge         Intel Corporation
+/0/100/1c/0     enp3s0          network        RTL8125 2.5GbE Controller
+/0/100/1f                       bridge         Intel Corporation
+/0/100/1f/0                     system         PnP device PNP0c02
+/0/100/1f/1                     system         PnP device PNP0c02
+/0/100/1f/2                     system         PnP device PNP0c02
+/0/100/1f/3                     system         PnP device PNP0c02
+/0/100/1f/4                     system         PnP device PNP0c02
+/0/100/1f/5                     system         PnP device PNP0c02
+/0/100/1f.3     card0           multimedia     Raptor Lake High Definition Audio Controller
+/0/100/1f.3/0   input11         input          HDA Intel PCH Rear Mic
+/0/100/1f.3/1   input12         input          HDA Intel PCH Front Mic
+/0/100/1f.3/2   input13         input          HDA Intel PCH Line
+/0/100/1f.3/3   input14         input          HDA Intel PCH Line Out
+/0/100/1f.3/4   input15         input          HDA Intel PCH Front Headphone
+/0/100/1f.4                     bus            Raptor Lake-S PCH SMBus Controller
+/0/100/1f.5                     bus            Raptor Lake SPI (flash) Controller
+/1              input0          input          Sleep Button
+/2              input1          input          Power Button
+/3              input2          input          Power Button
+/4              input6          input          ASRock LED Controller
+Architecture:                            x86_64
+CPU op-mode(s):                          32-bit, 64-bit
+Address sizes:                           46 bits physical, 48 bits virtual
+Byte Order:                              Little Endian
+CPU(s):                                  24
+On-line CPU(s) list:                     0-23
+Vendor ID:                               GenuineIntel
+Model name:                              13th Gen Intel(R) Core(TM) i7-13700
+CPU family:                              6
+Model:                                   183
+Thread(s) per core:                      2
+Core(s) per socket:                      16
+Socket(s):                               1
+Stepping:                                1
+CPU(s) scaling MHz:                      25%
+CPU max MHz:                             5200.0000
+CPU min MHz:                             800.0000
+BogoMIPS:                                4224.00
+Flags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize pconfig arch_lbr ibt flush_l1d arch_capabilities
+Virtualization:                          VT-x
+L1d cache:                               640 KiB (16 instances)
+L1i cache:                               768 KiB (16 instances)
+L2 cache:                                24 MiB (10 instances)
+L3 cache:                                30 MiB (1 instance)
+NUMA node(s):                            1
+NUMA node0 CPU(s):                       0-23
+Vulnerability Gather data sampling:      Not affected
+Vulnerability Ghostwrite:                Not affected
+Vulnerability Indirect target selection: Not affected
+Vulnerability Itlb multihit:             Not affected
+Vulnerability L1tf:                      Not affected
+Vulnerability Mds:                       Not affected
+Vulnerability Meltdown:                  Not affected
+Vulnerability Mmio stale data:           Not affected
+Vulnerability Old microcode:             Not affected
+Vulnerability Reg file data sampling:    Mitigation; Clear Register File
+Vulnerability Retbleed:                  Not affected
+Vulnerability Spec rstack overflow:      Not affected
+Vulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl
+Vulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization
+Vulnerability Spectre v2:                Mitigation; Enhanced / Automatic IBRS; IBPB conditional; PBRSB-eIBRS SW sequence; BHI BHI_DIS_S
+Vulnerability Srbds:                     Not affected
+Vulnerability Tsa:                       Not affected
+Vulnerability Tsx async abort:           Not affected
+Vulnerability Vmscape:                   Mitigation; IBPB before exit to userspace
+00:00.0 Host bridge: Intel Corporation Device a703 (rev 01)
+00:01.0 PCI bridge: Intel Corporation Device a70d (rev 01)
+00:06.0 PCI bridge: Intel Corporation Raptor Lake PCIe 4.0 Graphics Port (rev 01)
+00:14.0 USB controller: Intel Corporation Raptor Lake USB 3.2 Gen 2x2 (20 Gb/s) XHCI Host Controller (rev 11)
+00:14.2 RAM memory: Intel Corporation Raptor Lake-S PCH Shared SRAM (rev 11)
+00:15.0 Serial bus controller: Intel Corporation Raptor Lake Serial IO I2C Host Controller #0 (rev 11)
+00:16.0 Communication controller: Intel Corporation Raptor Lake CSME HECI #1 (rev 11)
+00:17.0 SATA controller: Intel Corporation Raptor Lake SATA AHCI Controller (rev 11)
+00:1c.0 PCI bridge: Intel Corporation Device 7a3a (rev 11)
+00:1f.0 ISA bridge: Intel Corporation Device 7a06 (rev 11)
+00:1f.3 Audio device: Intel Corporation Raptor Lake High Definition Audio Controller (rev 11)
+00:1f.4 SMBus: Intel Corporation Raptor Lake-S PCH SMBus Controller (rev 11)
+00:1f.5 Serial bus controller: Intel Corporation Raptor Lake SPI (flash) Controller (rev 11)
+01:00.0 VGA compatible controller: NVIDIA Corporation AD102 [GeForce RTX 4090] (rev a1)
+01:00.1 Audio device: NVIDIA Corporation AD102 High Definition Audio Controller (rev a1)
+02:00.0 Non-Volatile memory controller: Solidigm P44 Pro NVMe SSD [Hollywood Beach]
+03:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL8125 2.5GbE Controller (rev 05)
+NAME        MAJ:MIN RM   SIZE RO TYPE MOUNTPOINTS
+loop0         7:0    0    74M  1 loop /snap/core22/2339
+loop1         7:1    0     4K  1 loop /snap/bare/5
+loop2         7:2    0    74M  1 loop /snap/core22/2411
+loop3         7:3    0  66.8M  1 loop /snap/core24/1587
+loop4         7:4    0  66.8M  1 loop /snap/core24/1643
+loop5         7:5    0 248.6M  1 loop /snap/firefox/8417
+loop6         7:6    0 248.4M  1 loop /snap/firefox/8462
+loop7         7:7    0  16.5M  1 loop /snap/firmware-updater/226
+loop8         7:8    0  16.4M  1 loop /snap/firmware-updater/224
+loop9         7:9    0 516.2M  1 loop /snap/gnome-42-2204/226
+loop10        7:10   0 531.4M  1 loop /snap/gnome-42-2204/247
+loop11        7:11   0 606.1M  1 loop /snap/gnome-46-2404/153
+loop12        7:12   0  91.7M  1 loop /snap/gtk-common-themes/1535
+loop13        7:13   0   395M  1 loop /snap/mesa-2404/1165
+loop14        7:14   0  15.7M  1 loop /snap/snap-store/1367
+loop15        7:15   0  15.6M  1 loop /snap/snap-store/1338
+loop16        7:16   0  48.4M  1 loop /snap/snapd/26382
+loop17        7:17   0  49.3M  1 loop /snap/snapd/26865
+loop18        7:18   0   580K  1 loop /snap/snapd-desktop-integration/361
+loop19        7:19   0   580K  1 loop /snap/snapd-desktop-integration/357
+loop20        7:20   0  63.8M  1 loop /snap/core20/2866
+loop21        7:21   0 206.8M  1 loop /snap/flutter/149
+nvme0n1     259:0    0 953.9G  0 disk 
+├─nvme0n1p1 259:1    0     1G  0 part /boot/efi
+└─nvme0n1p2 259:2    0 952.8G  0 part /
+               total        used        free      shared  buff/cache   available
+Mem:           96314        2680       77133           5       17474       93633
+Swap:           8191           0        8191
+Tue Jun 16 19:13:40 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 595.71.05              Driver Version: 595.71.05      CUDA Version: 13.2     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA GeForce RTX 4090        Off |   00000000:01:00.0 Off |                  Off |
+| 34%   38C    P8             18W /  450W |      85MiB /  24564MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|    0   N/A  N/A            1600      G   /usr/lib/xorg/Xorg                       39MiB |
+|    0   N/A  N/A            1712      G   /usr/bin/gnome-shell                     15MiB |
++-----------------------------------------------------------------------------------------+

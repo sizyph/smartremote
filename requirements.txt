@@ -1,0 +1,3 @@
+# Core dispatcher dependency. Runners will add their own (ultralytics, optuna,
+# tensorrt, ...) in per-job virtualenvs so the orchestrator stays light.
+pyyaml>=6

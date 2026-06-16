@@ -1,0 +1,20 @@
+# Runtime state — keep the dirs, ignore their contents.
+inbox/*
+!inbox/.gitkeep
+jobs/*
+!jobs/.gitkeep
+gpu.lock
+config.yaml
+
+__pycache__/
+*.pyc
+
+# Local Claude Code settings — not part of the project.
+.claude/
+
+# Build / packaging artifacts.
+dist/
+build/
+*.deb
+*.egg-info/
+.pytest_cache/

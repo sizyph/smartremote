@@ -1,0 +1,25 @@
+Source: smartremote
+Section: utils
+Priority: optional
+Maintainer: Sizyph <steepening@gmail.com>
+Build-Depends: debhelper-compat (= 13),
+               dh-python,
+               python3-all,
+               python3-setuptools,
+               python3-yaml
+Standards-Version: 4.6.2
+Homepage: https://github.com/sizyph/smartremote
+Rules-Requires-Root: no
+
+Package: smartremote
+Architecture: all
+Depends: ${python3:Depends}, ${misc:Depends}, python3-yaml
+Description: Single-GPU remote job dispatcher with human-in-the-loop
+ SmartRemote ingests Markdown job files (submitted over SFTP), runs each in an
+ isolated workspace, serializes GPU work behind a lock, and bridges human
+ decisions to WhatsApp/email via a Hermes Agent gateway so a job can park
+ instead of block. The orchestrator is deliberately dumb; intelligence lives in
+ pluggable runners (a cloud planner, a local executor).
+ .
+ This package installs the `smartremote` command-line dispatcher. The systemd
+ unit and Hermes gateway are configured separately (see the documentation).

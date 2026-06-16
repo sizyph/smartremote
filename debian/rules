@@ -1,0 +1,6 @@
+#!/usr/bin/make -f
+# Build the SmartRemote Debian package via dh-python/pybuild.
+export PYBUILD_NAME=smartremote
+
+%:
+	dh $@ --with python3 --buildsystem=pybuild

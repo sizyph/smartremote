@@ -1,0 +1,19 @@
+[Unit]
+Description=SmartRemote job dispatcher
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# EDIT these two lines for your box:
+User=gildas
+WorkingDirectory=/home/gildas/SmartRemote
+# `smartremote` is installed by `pip install -e .` or the .deb (falls back to
+# `/usr/bin/python3 -m smartremote.cli` if you didn't install the console script).
+ExecStart=/usr/bin/smartremote --root /home/gildas/SmartRemote run
+Restart=on-failure
+RestartSec=3
+# GPU jobs are serialized by the app's gpu.lock, not by systemd.
+
+[Install]
+WantedBy=multi-user.target

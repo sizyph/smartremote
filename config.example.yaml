@@ -1,0 +1,11 @@
+# Copy to config.yaml (next to inbox/ and jobs/) and edit. The dispatcher reads
+# <root>/config.yaml; if absent, these defaults apply.
+
+poll_interval_seconds: 2
+max_parallel_cpu_jobs: 3      # gpu:none jobs run in parallel up to this;
+                              # gpu:required jobs ALWAYS serialize behind gpu.lock.
+
+hermes:
+  enabled: false              # false -> ConsoleNotifier (prints; great for dev/test)
+  base_url: "http://127.0.0.1:8080"   # your Hermes Agent messaging gateway
+  token: ""                   # bearer token, if your gateway requires one

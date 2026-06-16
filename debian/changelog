@@ -1,0 +1,6 @@
+smartremote (0.1.0) unstable; urgency=medium
+
+  * Initial release: dispatcher, job contract, single-GPU lock, park/resume
+    human-in-the-loop, crash recovery, console + Hermes notifiers.
+
+ -- Sizyph <steepening@gmail.com>  Tue, 16 Jun 2026 11:20:00 +0000
