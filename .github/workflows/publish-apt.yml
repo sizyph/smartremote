@@ -1,0 +1,82 @@
+name: publish-apt
+
+# Build the .deb on Ubuntu and publish a dist-based APT repository to GitHub
+# Pages. Trigger by pushing a version tag (vX.Y.Z) or running manually.
+#
+# The repository is UNSIGNED (clients use [trusted=yes]). To sign it: add a
+# GPG_PRIVATE_KEY secret, import it, and after writing dists/stable/Release run
+#   gpg --batch --yes --clearsign -o dists/stable/InRelease dists/stable/Release
+#   gpg --batch --yes -abs -o dists/stable/Release.gpg dists/stable/Release
+# then publish the public key and drop [trusted=yes] from the sources line.
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write   # attach the .deb to a GitHub Release
+  pages: write      # deploy to Pages
+  id-token: write   # Pages deployment via OIDC
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install packaging tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            debhelper dh-python python3-all python3-setuptools python3-yaml \
+            dpkg-dev apt-utils
+
+      - name: Build .deb
+        run: dpkg-buildpackage -us -uc -b
+
+      - name: Assemble APT repository
+        run: |
+          mkdir -p public/pool/main public/dists/stable/main/binary-all
+          cp ../smartremote_*.deb public/pool/main/
+          cd public
+          dpkg-scanpackages --multiversion pool/main > dists/stable/main/binary-all/Packages
+          gzip -9kf dists/stable/main/binary-all/Packages
+          apt-ftparchive \
+            -o APT::FTPArchive::Release::Origin=smartremote \
+            -o APT::FTPArchive::Release::Label=smartremote \
+            -o APT::FTPArchive::Release::Suite=stable \
+            -o APT::FTPArchive::Release::Codename=stable \
+            -o APT::FTPArchive::Release::Components=main \
+            -o APT::FTPArchive::Release::Architectures=all \
+            release dists/stable > dists/stable/Release
+          cp ../packaging/apt-index.html index.html
+          echo "=== repo tree ==="; find . -type f | sort
+
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+      - id: deploy
+        uses: actions/deploy-pages@v4
+
+      - name: Attach .deb to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" public/pool/main/smartremote_*.deb \
+            --title "$GITHUB_REF_NAME" \
+            --notes "APT: \`deb [trusted=yes] https://sizyph.github.io/smartremote stable main\`" \
+          || gh release upload "$GITHUB_REF_NAME" public/pool/main/smartremote_*.deb --clobber

@@ -30,11 +30,18 @@ See [docs/architecture.md](docs/architecture.md) and [docs/job-format.md](docs/j
 # From source (provides the `smartremote` command):
 git clone https://github.com/sizyph/smartremote.git && cd smartremote
 pip install -e .
-
-# Debian/Ubuntu: a .deb is built on every push by CI (see the Actions tab).
-# APT-repo publishing is being wired up; until then grab the artifact and:
-#   sudo dpkg -i smartremote_*.deb && sudo apt-get -f install
 ```
+
+### Debian / Ubuntu (APT repo on GitHub Pages)
+
+```bash
+echo 'deb [trusted=yes] https://sizyph.github.io/smartremote stable main' \
+  | sudo tee /etc/apt/sources.list.d/smartremote.list
+sudo apt-get update && sudo apt-get install smartremote
+```
+
+> Unsigned for now (hence `[trusted=yes]`); built and published by
+> [`publish-apt.yml`](.github/workflows/publish-apt.yml) on every `v*` tag.
 
 ## Quickstart (no server needed)
 

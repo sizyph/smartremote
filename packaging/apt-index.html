@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SmartRemote — APT repository</title>
+<style>
+  body{font-family:system-ui,-apple-system,sans-serif;max-width:720px;margin:3rem auto;padding:0 1rem;line-height:1.55;color:#1b1b1b}
+  pre{background:#f4f4f4;padding:1rem;border-radius:8px;overflow:auto}
+  code{background:#f4f4f4;padding:.1em .3em;border-radius:4px}
+  a{color:#0969da}
+</style>
+<h1>SmartRemote — APT repository</h1>
+<p>A dumb, deterministic single-GPU job dispatcher with human-in-the-loop over
+WhatsApp/email.</p>
+<h2>Install</h2>
+<pre>echo 'deb [trusted=yes] https://sizyph.github.io/smartremote stable main' \
+  | sudo tee /etc/apt/sources.list.d/smartremote.list
+sudo apt-get update
+sudo apt-get install smartremote</pre>
+<p>This repository is currently <strong>unsigned</strong> (hence
+<code>[trusted=yes]</code>). To verify signatures, the maintainer can add a GPG
+key and the line drops the <code>[trusted=yes]</code>.</p>
+<p>Source &amp; documentation:
+<a href="https://github.com/sizyph/smartremote">github.com/sizyph/smartremote</a></p>
+</html>
