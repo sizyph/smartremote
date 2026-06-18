@@ -18,6 +18,7 @@ AGENTS = {"cloud", "local"}
 GPU = {"required", "none"}
 CHANNELS = {"email", "whatsapp", "none"}
 DEPLOY_TARGETS = {"jetson", "server", "arm", "mcu", "none"}
+RUNNERS = {"", "scout", "cloud", "plan-execute"}  # "" = route by type
 
 _ID_RE = re.compile(r"^[a-z0-9][a-z0-9._-]{0,63}$")  # 1-64 chars, lowercase
 _FRONTMATTER_RE = re.compile(r"^---\s*\n(.*?)\n---\s*\n?(.*)$", re.DOTALL)
@@ -59,6 +60,7 @@ class Job:
     budget: Budget = dataclasses.field(default_factory=Budget)
     depends_on: list[str] = dataclasses.field(default_factory=list)
     deploy_target: str = "none"
+    runner: str = ""  # force a specific runner; "" routes by type
     source_path: str | None = None
 
     def validate(self) -> None:
@@ -74,6 +76,8 @@ class Job:
             raise JobError(
                 f"deploy_target={self.deploy_target!r} not in {sorted(DEPLOY_TARGETS)}"
             )
+        if self.runner not in RUNNERS:
+            raise JobError(f"runner={self.runner!r} not in {sorted(RUNNERS)}")
         if not isinstance(self.depends_on, list) or not all(
             isinstance(x, str) for x in self.depends_on
         ):
@@ -129,6 +133,7 @@ def parse_job(
         ),
         depends_on=list(meta.get("depends_on") or []),
         deploy_target=str(meta.get("deploy_target") or "none").strip(),
+        runner=str(meta.get("runner") or "").strip(),
         source_path=source_path,
     )
     if not job.id:

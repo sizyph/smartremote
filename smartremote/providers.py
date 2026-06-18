@@ -62,7 +62,8 @@ class OllamaProvider:
         self.model = model
         self.base_url = base_url.rstrip("/")
 
-    def complete(self, prompt: str, *, system: str | None = None, workspace=None) -> str:
+    def generate(self, prompt: str, system: str | None = None) -> dict:
+        """Raw Ollama response, including timing fields (eval_count, eval_duration, ...)."""
         payload = {"model": self.model, "prompt": prompt, "stream": False}
         if system:
             payload["system"] = system
@@ -71,11 +72,14 @@ class OllamaProvider:
             headers={"Content-Type": "application/json"}, method="POST")
         try:
             with urllib.request.urlopen(req, timeout=LOCAL_TIMEOUT) as r:  # noqa: S310
-                return json.loads(r.read()).get("response", "").strip()
+                return json.loads(r.read())
         except Exception as e:  # noqa: BLE001
             raise ProviderError(
                 f"Ollama call failed (model '{self.model}' @ {self.base_url}): {e}. "
                 "Is the model pulled and `ollama serve` running?") from e
+
+    def complete(self, prompt: str, *, system: str | None = None, workspace=None) -> str:
+        return self.generate(prompt, system).get("response", "").strip()
 
 
 class MockProvider:

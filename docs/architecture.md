@@ -59,4 +59,6 @@ parked job survives a full restart.
 | `PlanExecuteRunner`: plan→execute→guard→escalate | real — calls each role's provider |
 | Providers (Claude/Codex CLI · Ollama · mock) | real |
 | `CloudRunner`: research → remote report | real |
+| `ScoutRunner` (model-scout: benchmark → approve → promote) | real |
+| Eval/benchmark suite + champion/challenger ranking | real (extend tasks for sharper signal) |
 | autoresearch / Optuna inner loop | **not yet** (job 02) |

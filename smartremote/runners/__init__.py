@@ -71,12 +71,18 @@ class Runner:
 
 
 def get_runner(job) -> Runner:
-    """Route a job to a runner: research jobs to the remote agent, everything else
-    through the plan -> execute -> guard -> escalate pipeline.
+    """Route a job to a runner. An explicit `runner:` wins; otherwise research jobs
+    go to the remote agent and everything else through the plan->execute->guard
+    ->escalate pipeline.
     """
     from .cloud import CloudRunner
     from .pipeline import PlanExecuteRunner
+    from .scout import ScoutRunner
 
+    explicit = {"scout": ScoutRunner, "cloud": CloudRunner, "plan-execute": PlanExecuteRunner}
+    cls = explicit.get(getattr(job, "runner", "") or "")
+    if cls:
+        return cls()
     if job.type == "research":
         return CloudRunner()
     return PlanExecuteRunner()

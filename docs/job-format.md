@@ -14,6 +14,7 @@ gpu: required|none           # required. `required` serializes behind the GPU lo
 priority: 10                 # optional, lower runs first (default 100)
 needs_human: true            # optional hint that the job may post questions
 deploy_target: jetson|server|arm|mcu|none   # drives the productionization runtime
+runner: scout                # optional; force a runner (scout|cloud|plan-execute)
 depends_on: [other-job-id]   # optional; job stays `blocked` until deps are `done`
 notify:                      # optional; per-event channel
   on_done: email
@@ -32,6 +33,7 @@ budget:                      # optional, advisory
 ```
 
 ## Routing
+- an explicit `runner:` (`scout` | `cloud` | `plan-execute`) forces that runner.
 - `type: research` → the **research** runner: the remote agent writes the report.
 - everything else → the **plan → execute → guard → escalate** pipeline: the remote
   `planner` writes `artifacts/plan.md`, the local `executor` applies it

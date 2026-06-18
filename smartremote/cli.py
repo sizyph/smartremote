@@ -8,7 +8,7 @@ import shutil
 import sys
 from pathlib import Path
 
-from . import hermes_setup, models
+from . import hermes_setup, models, providers, scout
 from . import state as st
 from .config import ROLE_HELP, load_config, update_local
 from .dispatcher import Dispatcher
@@ -140,6 +140,65 @@ def cmd_models_setup(args) -> None:
         print("\nTip: pull + assign the executor, e.g.:  smartremote models setup --pull qwen3-coder:32b")
 
 
+def _executor_model(cfg) -> str:
+    return (cfg["models"]["roles"].get("executor") or {}).get("model", "")
+
+
+def cmd_models_bench(args) -> None:
+    cfg = _cfg(args)
+    base = cfg["models"]["local"]["base_url"]
+    champion = _executor_model(cfg)
+    tags = args.tags or ([champion] if champion else []) + [r.tag for r in models.RECOMMENDED]
+    tags = list(dict.fromkeys(t for t in tags if t))
+    if args.pull:
+        have = set(models.ollama_list())
+        for t in tags:
+            if t not in have:
+                models.ollama_pull(t)
+    results = [scout.benchmark_model(t, base) for t in tags]
+    print(scout.report_table(results, champion))
+
+
+def cmd_models_scout(args) -> None:
+    agent = providers.provider_for_role(_cfg(args), "planner")
+    prompt = (
+        "List 3-5 currently-best OPEN-WEIGHT models for coding + complex reasoning that fit a "
+        "single 24 GB GPU at ~Q4 and are available as Ollama tags. For each give the exact "
+        "Ollama tag, approx params, and one line on strengths. Prefer recent releases. "
+        "Output a short Markdown list I can paste into a scout job's Challengers section.")
+    print(agent.complete(prompt, system="You are a model-scouting research agent with web access."))
+
+
+def cmd_models_tournament(args) -> None:
+    cfg = _cfg(args)
+    base = cfg["models"]["local"]["base_url"]
+    champion = _executor_model(cfg)
+    challengers = args.challengers.split(",") if args.challengers else [r.tag for r in models.RECOMMENDED]
+    tags = list(dict.fromkeys(([champion] if champion else []) + [c.strip() for c in challengers if c.strip()]))
+    if args.pull:
+        have = set(models.ollama_list())
+        for t in tags:
+            if t not in have:
+                models.ollama_pull(t)
+    results = [scout.benchmark_model(t, base) for t in tags]
+    print(scout.report_table(results, champion))
+    winner = scout.choose_winner(champion, results)
+    if not winner:
+        print(f"\nchampion '{champion or '(none)'}' retained — no challenger cleared the bar")
+        return
+    print(f"\nchallenger '{winner}' beats champion '{champion or '(none)'}'")
+    if args.notify:
+        h = cfg["hermes"]
+        HermesNotifier(h["base_url"], h.get("token") or None, send_path=h.get("send_path", "/send")).send(
+            channel="whatsapp", subject="Model scout",
+            body=f"Promote executor '{winner}' over '{champion or '(none)'}'?", job_id="models-tournament")
+    if args.promote:
+        update_local(_root(args), {"models": {"roles": {"executor": {"provider": "local", "model": winner}}}})
+        print(f"promoted executor -> {winner}")
+    else:
+        print(f"to promote:  smartremote models set executor local {winner}")
+
+
 # ---- hermes ---------------------------------------------------------------
 def _prompt_email() -> dict | None:
     if not (sys.stdin.isatty() and sys.stdout.isatty()):
@@ -255,6 +314,18 @@ def main(argv=None) -> None:
     sp = msub.add_parser("setup", help="recommend + (optionally) pull + assign roles")
     sp.add_argument("--pull", metavar="TAG", help="ollama pull this tag and set it as executor")
     sp.set_defaults(fn=cmd_models_setup)
+    sp = msub.add_parser("bench", help="benchmark local models on the eval suite")
+    sp.add_argument("tags", nargs="*", help="Ollama tags (default: executor + recommended)")
+    sp.add_argument("--pull", action="store_true", help="ollama pull any missing tags first")
+    sp.set_defaults(fn=cmd_models_bench)
+    msub.add_parser("scout", help="ask the planner (web) for fresh local-model candidates").set_defaults(
+        fn=cmd_models_scout)
+    sp = msub.add_parser("tournament", help="benchmark champion vs challengers; optionally promote")
+    sp.add_argument("--challengers", help="comma-separated Ollama tags (default: recommended catalog)")
+    sp.add_argument("--pull", action="store_true")
+    sp.add_argument("--promote", action="store_true", help="set the winning challenger as executor")
+    sp.add_argument("--notify", action="store_true", help="send the recommendation via Hermes")
+    sp.set_defaults(fn=cmd_models_tournament)
 
     # hermes
     hp = sub.add_parser("hermes", help="install + manage the Hermes notification gateway")

@@ -130,3 +130,36 @@ def test_pipeline_escalates_on_guard_fail(tmp_path, monkeypatch):
     out = PlanExecuteRunner().run(_pipeline_ctx(tmp_path))
     assert (tmp_path / "artifacts" / "result.escalated.md").exists()
     assert "escalated" in out.summary
+
+
+def test_scout_ranking_and_winner():
+    from smartremote import scout
+
+    results = [scout.benchmark_model(t) for t in ("qwen3:14b", "qwen3-coder:32b", "devstral:24b")]
+    # fake quality: qwen3-coder 1.0 > devstral 0.83 > qwen3:14b 0.66
+    assert [r.tag for r in scout.rank(results)][0] == "qwen3-coder:32b"
+    # weak champion gets beaten; strong champion is retained
+    assert scout.choose_winner("qwen3:14b", results) == "qwen3-coder:32b"
+    assert scout.choose_winner("qwen3-coder:32b", results) is None
+
+
+def test_scout_runner_promotes_on_approval(tmp_path, monkeypatch):
+    monkeypatch.setenv("SMARTREMOTE_FAKE_LLM", "1")
+    from smartremote.runners import RunContext
+    from smartremote.runners.scout import ScoutRunner
+
+    job_dir = tmp_path / "jobs" / "scout"
+    job_dir.mkdir(parents=True)
+    (job_dir / "answers").mkdir()
+    (job_dir / "answers" / "promote-model.txt").write_text("approve", encoding="utf-8")  # pre-answer the park
+
+    cfg = load_config(None)
+    cfg["models"]["roles"]["executor"]["model"] = "qwen3:14b"  # weak champion
+    job = parse_job(
+        "---\nid: s\ntype: pipeline\nrunner: scout\nagent: local\ngpu: required\n---\n"
+        "# Goal\nscout\n## Challengers\n- qwen3-coder:32b\n- devstral:24b\n")
+    out = ScoutRunner().run(RunContext(job=job, job_dir=job_dir, cfg=cfg))
+
+    assert "promoted executor" in out.summary
+    promoted = load_config(tmp_path / "config.yaml")["models"]["roles"]["executor"]["model"]
+    assert promoted == "qwen3-coder:32b"

@@ -98,7 +98,17 @@ smartremote models recommend             # local models that fit a 24 GB GPU
 smartremote models pull qwen3-coder:32b  # ollama pull
 smartremote models set executor local qwen3-coder:32b
 smartremote models setup --pull qwen3-coder:32b   # recommend + pull + assign
+
+smartremote models bench                 # benchmark local models on the eval suite
+smartremote models scout                 # ask the remote agent (web) for fresh candidates
+smartremote models tournament --promote  # champion vs challengers; promote the winner
 ```
+
+The **model-scout job** ([examples/05-model-scout.md](examples/05-model-scout.md),
+`runner: scout`) automates this: it benchmarks the champion against challengers
+(quality + tok/s + GPU-fit) and asks you over WhatsApp — via Hermes — before
+promoting a new `executor`. Schedule it to keep the local model current as new
+releases land.
 
 Local models run on [Ollama](https://ollama.com) (`curl -fsSL https://ollama.com/install.sh | sh`).
 `smartremote models` also reports whether a CUDA GPU is visible (`nvidia-smi`).
