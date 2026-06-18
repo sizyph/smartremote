@@ -62,6 +62,18 @@ The default notifier prints to the dispatcher's stdout — no Hermes needed to
 develop. Set `hermes.enabled: true` in `config.yaml` (copy `config.example.yaml`)
 to send for real.
 
+## Setup & health
+
+```bash
+smartremote setup     # guided first run: writes a starter config, then lists exactly what to do next
+smartremote doctor    # re-check anytime: what works, what to fix, and the command to fix it
+```
+
+`doctor` checks Python/GPU, Ollama and each model role, the remote agent CLIs, and
+the Hermes gateway — printing ✓ / ⚠ / ✗ with a one-line fix for anything not ready,
+and the single highest-priority next step. `setup` runs the same checks but first
+creates `config.yaml` + the `inbox/` and `jobs/` dirs and explains the four roles.
+
 ## Deploy to the server
 
 ```bash

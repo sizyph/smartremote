@@ -8,7 +8,7 @@ import shutil
 import sys
 from pathlib import Path
 
-from . import hermes_setup, models, providers, scout
+from . import doctor, hermes_setup, models, providers, scout
 from . import state as st
 from .config import ROLE_HELP, load_config, update_local
 from .dispatcher import Dispatcher
@@ -52,7 +52,7 @@ def cmd_status(args) -> None:
                 data = s.read()
                 rows.append((data["id"], data["state"], data["type"], data.get("pending_question") or "-"))
     if not rows:
-        print("(no jobs)")
+        print("(no jobs) — submit one:  smartremote submit examples/04-slam-research.md")
         return
     w = max(len(r[0]) for r in rows)
     for jid, state, typ, q in rows:
@@ -70,6 +70,55 @@ def cmd_selftest(args) -> None:
     from .selftest import run_selftest
 
     run_selftest()
+
+
+# ---- doctor / setup -------------------------------------------------------
+STARTER_CONFIG = """\
+# SmartRemote config. Every key is optional — built-in defaults apply otherwise.
+poll_interval_seconds: 2
+max_parallel_cpu_jobs: 3
+# Model roles and the Hermes gateway are managed by the CLI (written to
+# smartremote.local.yaml), so prefer:  smartremote models setup  /  smartremote hermes setup
+"""
+
+
+def cmd_doctor(args) -> None:
+    doctor.render(doctor.run_checks(_cfg(args), _root(args)))
+
+
+def cmd_setup(args) -> None:
+    root = _root(args)
+    print("SmartRemote setup\n=================\n")
+    print(
+        "Jobs run through four roles:\n"
+        "  planner    remote (Claude Code / Codex) — writes the plan\n"
+        "  executor   local  (Ollama, optionally via Cline) — applies the plan\n"
+        "  guard      remote — checks the result against the plan\n"
+        "  escalation remote — takes over if the local model struggles\n"
+        "Notifications (done / questions) go through a Hermes gateway over email + WhatsApp.\n")
+
+    cfgfile = root / "config.yaml"
+    if not cfgfile.exists():
+        cfgfile.write_text(STARTER_CONFIG, encoding="utf-8")
+        print(f"created {cfgfile}")
+    for d in ("inbox", "jobs"):
+        (root / d).mkdir(parents=True, exist_ok=True)
+
+    checks = doctor.run_checks(_cfg(args), root)
+    doctor.render(checks)
+
+    fixes: list[str] = []
+    for status in (doctor.FAIL, doctor.WARN):
+        for c in checks:
+            if c.status == status and c.fix and c.fix not in fixes:
+                fixes.append(c.fix)
+    if fixes:
+        print("\nTo finish setup, in order:")
+        for i, fix in enumerate(fixes, 1):
+            print(f"  {i}. {fix}")
+    else:
+        print("\nAll set — submit a job:  smartremote submit examples/04-slam-research.md")
+    print("\nRe-check anytime:  smartremote doctor")
 
 
 # ---- models ---------------------------------------------------------------
@@ -91,6 +140,7 @@ def cmd_models_show(args) -> None:
         r = roles.get(role, {})
         target = f"{r.get('provider', '?')}:{r.get('model', '?')}"
         print(f"  {role:<{w}}  {target:<22} {help_}")
+    print("\nHealth check + fixes:  smartremote doctor")
 
 
 def cmd_models_recommend(args) -> None:
@@ -300,6 +350,8 @@ def main(argv=None) -> None:
     sp.add_argument("job"); sp.add_argument("qid"); sp.add_argument("text")
     sp.set_defaults(fn=cmd_answer)
     sub.add_parser("selftest", help="hermetic park/resume test").set_defaults(fn=cmd_selftest)
+    sub.add_parser("setup", help="guided first-time setup (config, models, notifications)").set_defaults(fn=cmd_setup)
+    sub.add_parser("doctor", help="diagnose config + dependencies; show what to fix").set_defaults(fn=cmd_doctor)
 
     # models
     mp = sub.add_parser("models", help="show and set up local/remote AI models")

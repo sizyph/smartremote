@@ -182,3 +182,22 @@ def test_cline_missing_binary_errors(monkeypatch):
     monkeypatch.setattr(providers.shutil, "which", lambda _c: None)
     with pytest.raises(providers.ProviderError):
         providers.ClineProvider("qwen3-coder:32b", "http://127.0.0.1:11434", {}).complete("do X")
+
+
+def test_doctor_reports_gaps_and_fixes(monkeypatch, tmp_path):
+    from smartremote import doctor, models
+
+    monkeypatch.setattr(models, "ollama_available", lambda: False)
+    monkeypatch.setattr(models, "ollama_list", lambda: [])
+    monkeypatch.setattr(models, "gpu_info", lambda: None)
+    monkeypatch.setattr(doctor.shutil, "which", lambda _c: None)  # no claude/codex/cline
+
+    checks = doctor.run_checks(load_config(None), tmp_path)
+    by_name = {c.name: c for c in checks}
+    assert by_name["Ollama"].status == doctor.FAIL and by_name["Ollama"].fix
+    executor = next(c for c in checks if c.name.startswith("executor"))
+    assert executor.status == doctor.FAIL and executor.fix  # local role needs Ollama
+    planner = next(c for c in checks if c.name.startswith("planner"))
+    assert planner.status == doctor.WARN  # remote claude not on PATH
+    assert by_name["Hermes"].status == doctor.WARN  # disabled by default
+    assert doctor.next_step(checks)  # always offers a prioritized fix
