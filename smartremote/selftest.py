@@ -1,10 +1,13 @@
-"""Hermetic end-to-end test of the park/resume cycle, in a throwaway temp dir.
+"""Hermetic end-to-end test of the plan -> approve -> execute -> guard pipeline.
 
-Proves: ingest -> run -> park on a question -> human answers -> resume -> done.
+Forces mock providers (SMARTREMOTE_FAKE_LLM=1) so it runs fully offline. Proves:
+ingest -> plan -> park on approval -> human answers -> execute -> guard -> done.
 Run with `python -m smartremote.cli selftest`.
 """
 from __future__ import annotations
 
+import os
+import shutil
 import tempfile
 import time
 from pathlib import Path
@@ -15,20 +18,20 @@ from .dispatcher import Dispatcher
 
 JOB = """---
 id: selftest-demo
-title: Self-test plan-approval loop
+title: Self-test plan/execute/guard pipeline
 type: build
 agent: cloud
 gpu: none
 deploy_target: jetson
+needs_human: true
 notify: {on_done: none, on_question: none, on_fail: none}
 ---
 # Goal
-Exercise the cloud-plan -> human approval -> finish flow end to end.
+Exercise plan -> approve -> execute -> guard end to end (mock models).
 """
 
 
 def _drain(disp: Dispatcher, timeout: float = 15.0) -> None:
-    """Run schedule, then reap until no subprocess is in flight."""
     disp.schedule()
     deadline = time.monotonic() + timeout
     while disp.running and time.monotonic() < deadline:
@@ -39,30 +42,32 @@ def _drain(disp: Dispatcher, timeout: float = 15.0) -> None:
 
 def run_selftest() -> None:
     tmp = Path(tempfile.mkdtemp(prefix="smartremote-selftest-"))
+    prev = os.environ.get("SMARTREMOTE_FAKE_LLM")
+    os.environ["SMARTREMOTE_FAKE_LLM"] = "1"  # inherited by the run_job subprocess
+    job_dir = tmp / "jobs" / "selftest-demo"
     try:
         disp = Dispatcher(tmp, load_config(None))
         (tmp / "inbox" / "selftest-demo.md").write_text(JOB, encoding="utf-8")
         disp.ingest()
 
-        _drain(disp)  # runs until it parks on the approval question
-        s = st.Status(tmp / "jobs" / "selftest-demo")
-        data = s.read()
+        _drain(disp)  # plan (mock) then park on approval
+        data = st.Status(job_dir).read()
         assert data["state"] == st.WAITING_HUMAN, f"expected waiting_human, got {data['state']}"
-        qid = data["pending_question"]
-        assert qid, "expected a pending question"
-        print(f"PASS  parked on question {qid!r}")
+        assert data["pending_question"] == "approve-plan", data["pending_question"]
+        assert (job_dir / "artifacts" / "plan.md").exists(), "planner did not write plan.md"
+        print("PASS  planned and parked on approval")
 
-        # Human answers via the same path `smartremote answer` would use.
-        (tmp / "jobs" / "selftest-demo" / "answers" / f"{qid}.txt").write_text(
-            "approve", encoding="utf-8"
-        )
-        _drain(disp)  # resumes and completes
-        data = s.read()
+        (job_dir / "answers" / "approve-plan.txt").write_text("approve", encoding="utf-8")
+        _drain(disp)  # resume -> execute -> guard -> done
+        data = st.Status(job_dir).read()
         assert data["state"] == st.DONE, f"expected done, got {data['state']}"
-        assert data["result"]["artifacts"] == ["artifacts/plan.md"], data["result"]
-        print(f"PASS  resumed and completed; artifacts={data['result']['artifacts']}")
+        arts = data["result"]["artifacts"]
+        assert "artifacts/plan.md" in arts and "artifacts/result.md" in arts, arts
+        print(f"PASS  executed + guarded; artifacts={arts}")
         print("SELFTEST OK")
     finally:
-        import shutil
-
+        if prev is None:
+            os.environ.pop("SMARTREMOTE_FAKE_LLM", None)
+        else:
+            os.environ["SMARTREMOTE_FAKE_LLM"] = prev
         shutil.rmtree(tmp, ignore_errors=True)

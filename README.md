@@ -135,12 +135,12 @@ scripts/          atomic SFTP submit helper
 
 ## Status — v0.1
 
-The contract, dispatcher, scheduling, GPU lock, park/resume, and crash recovery
-are **real and tested**. The cloud/local runners are **stubs** with the real
-control flow wired in (replacing them with a Claude Code / Codex call and a local
-model is the next step). The Hermes **inbound** path (WhatsApp reply → `answers/`)
-is a small webhook still to be written. See the table in
-[docs/architecture.md](docs/architecture.md).
+The contract, dispatcher, scheduling, GPU lock, park/resume, crash recovery, the
+`models`/`hermes` CLIs, and the **plan → execute → guard → escalate** pipeline
+(Claude Code/Codex for planning + guard, Ollama for execution) are **real and
+tested** — run `smartremote selftest`. Still to come: the Hermes **inbound** path
+(WhatsApp reply → `answers/`, a small webhook) and the autoresearch/Optuna tuning
+loop. See the table in [docs/architecture.md](docs/architecture.md).
 
 ## License
 

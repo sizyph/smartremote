@@ -32,9 +32,12 @@ budget:                      # optional, advisory
 ```
 
 ## Routing
-- `type: research` or `agent: cloud` → the **cloud** runner (planner / web).
-- `agent: local` → the **local** runner (executes an existing `artifacts/plan.md`).
-- otherwise → the demo runner.
+- `type: research` → the **research** runner: the remote agent writes the report.
+- everything else → the **plan → execute → guard → escalate** pipeline: the remote
+  `planner` writes `artifacts/plan.md`, the local `executor` applies it
+  (`artifacts/result.md`), the remote `guard` checks the result against the plan,
+  and the remote `escalation` model takes over if the guard fails. A pre-existing
+  `artifacts/plan.md` skips remote planning (offline mode).
 
 ## Lifecycle
 `received → queued` (or `blocked` if it has unmet `depends_on`) `→ running →`

@@ -83,3 +83,50 @@ def test_recommended_models_fit_24gb():
     for r in models.RECOMMENDED:
         assert r.vram_q4_gb < 24, f"{r.tag} won't fit 24 GB"
         assert r.role in {"planner", "executor", "guard", "escalation"}
+
+
+def test_provider_resolution(monkeypatch):
+    from smartremote import providers
+
+    cfg = load_config(None)
+    monkeypatch.delenv("SMARTREMOTE_FAKE_LLM", raising=False)
+    assert isinstance(providers.provider_for_role(cfg, "executor"), providers.OllamaProvider)
+    assert isinstance(providers.provider_for_role(cfg, "planner"), providers.RemoteCliProvider)
+    monkeypatch.setenv("SMARTREMOTE_FAKE_LLM", "1")
+    assert isinstance(providers.provider_for_role(cfg, "planner"), providers.MockProvider)
+
+
+def test_parse_verdict():
+    from smartremote.providers import parse_verdict
+
+    assert parse_verdict('{"ok": true, "issues": [], "summary": "good"}')["ok"] is True
+    assert parse_verdict('noise {"ok": false, "issues": ["x"]} tail')["ok"] is False
+    assert parse_verdict("not json")["ok"] is True  # lenient default avoids false escalation
+
+
+def _pipeline_ctx(tmp_path):
+    from smartremote.runners import RunContext
+
+    job = parse_job("---\nid: p\ntype: build\nagent: cloud\ngpu: none\nneeds_human: false\n---\n# Goal\nbuild X\n")
+    return RunContext(job=job, job_dir=tmp_path, cfg=load_config(None))
+
+
+def test_pipeline_executes_and_guards(tmp_path, monkeypatch):
+    monkeypatch.setenv("SMARTREMOTE_FAKE_LLM", "1")
+    from smartremote.runners.pipeline import PlanExecuteRunner
+
+    out = PlanExecuteRunner().run(_pipeline_ctx(tmp_path))
+    assert (tmp_path / "artifacts" / "plan.md").exists()
+    assert (tmp_path / "artifacts" / "result.md").exists()
+    assert "artifacts/result.escalated.md" not in out.artifacts
+    assert "ok" in out.summary
+
+
+def test_pipeline_escalates_on_guard_fail(tmp_path, monkeypatch):
+    monkeypatch.setenv("SMARTREMOTE_FAKE_LLM", "1")
+    monkeypatch.setenv("SMARTREMOTE_FAKE_GUARD", "fail")
+    from smartremote.runners.pipeline import PlanExecuteRunner
+
+    out = PlanExecuteRunner().run(_pipeline_ctx(tmp_path))
+    assert (tmp_path / "artifacts" / "result.escalated.md").exists()
+    assert "escalated" in out.summary

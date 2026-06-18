@@ -1,52 +1,25 @@
-"""Cloud-agent runner — STUB.
+"""CloudRunner: research / remote-only jobs.
 
-In production this hands the job body to a frontier agent with internet access
-(Claude Code or Codex), which drafts a plan, can ask the human via ctx.ask(), and
-emits artifacts/plan.md for the local executor. The stub below performs the real
-control flow (draft -> human approval -> finalize) so the park/resume machinery is
-exercised end to end without an API key. Replace the marked section with a real
-agent invocation (e.g. shell out to `claude -p` or the Codex CLI in job_dir).
+The remote agent (the `planner` role — Claude Code / Codex) produces the
+deliverable directly. Routed for `type: research`.
 """
 from __future__ import annotations
 
-import shutil
-
+from ..providers import provider_for_role
 from . import Outcome, RunContext, Runner
+
+RESEARCH_SYSTEM = (
+    "You are a research agent with web access. Produce a thorough, well-structured, "
+    "cited Markdown report that answers the request. Output only the report."
+)
 
 
 class CloudRunner(Runner):
     name = "cloud"
 
     def run(self, ctx: RunContext) -> Outcome:
-        planner = ctx.roles.get("planner") or {}
-        print(f"[cloud] planning with {planner.get('provider', '?')}:{planner.get('model', '?')}", flush=True)
-        ctx.set_step("plan")
-        draft = ctx.job_dir / "workspace" / "plan.draft.md"
-        if not draft.exists():  # idempotent: survives resume replay
-            # --- replace with a real planner call -------------------------
-            draft.write_text(
-                f"# Draft plan for {ctx.job.id}\n\n{ctx.job.body.strip()}\n\n"
-                "1. (planner stub) decompose into steps\n2. ...\n",
-                encoding="utf-8",
-            )
-            # --------------------------------------------------------------
-
-        ctx.set_step("approve")
-        decision = ctx.ask(
-            "approve-plan",
-            f"Approve the drafted plan for '{ctx.job.title}'? "
-            "Reply: approve / revise / reject.",
-            choices=["approve", "revise", "reject"],
-        ).lower()
-
-        if decision.startswith("approve"):
-            final = ctx.job_dir / "artifacts" / "plan.md"
-            shutil.copy2(draft, final)
-            return Outcome(
-                summary="Plan approved and finalized.",
-                artifacts=[str(final.relative_to(ctx.job_dir))],
-            )
-        if decision.startswith("reject"):
-            raise RuntimeError("Plan rejected by human; aborting job.")
-        ctx.checkpoint["revise_count"] = ctx.checkpoint.get("revise_count", 0) + 1
-        raise RuntimeError("Revision requested — wire this to the planner loop.")
+        (ctx.job_dir / "artifacts").mkdir(exist_ok=True)
+        agent = provider_for_role(ctx.cfg, "planner")
+        report = agent.complete(ctx.job.body, system=RESEARCH_SYSTEM, workspace=ctx.job_dir / "workspace")
+        (ctx.job_dir / "artifacts" / "report.md").write_text(report, encoding="utf-8")
+        return Outcome(summary="research report generated", artifacts=["artifacts/report.md"])

@@ -38,7 +38,7 @@ class RunContext:
     job: Any
     job_dir: Path
     checkpoint: dict = field(default_factory=dict)
-    roles: dict = field(default_factory=dict)  # role -> {provider, model}; from config
+    cfg: dict = field(default_factory=dict)  # full resolved config (model roles, providers, ...)
 
     def __post_init__(self):
         self.questions_dir = self.job_dir / "questions"
@@ -71,15 +71,12 @@ class Runner:
 
 
 def get_runner(job) -> Runner:
-    """Route a job to a runner. Research and cloud-planned jobs go to the cloud
-    agent; explicitly-local jobs to the offline executor; anything else to the demo.
+    """Route a job to a runner: research jobs to the remote agent, everything else
+    through the plan -> execute -> guard -> escalate pipeline.
     """
     from .cloud import CloudRunner
-    from .demo import DemoRunner
-    from .local import LocalRunner
+    from .pipeline import PlanExecuteRunner
 
-    if job.type == "research" or job.agent == "cloud":
+    if job.type == "research":
         return CloudRunner()
-    if job.agent == "local":
-        return LocalRunner()
-    return DemoRunner()
+    return PlanExecuteRunner()

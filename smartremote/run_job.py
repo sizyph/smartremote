@@ -29,8 +29,8 @@ def main(argv: list[str]) -> int:
     status.update(attempts=data.get("attempts", 0) + 1)
     status.transition(st.RUNNING, "runner started")
 
-    roles = load_config(job_dir.parent.parent / "config.yaml").get("models", {}).get("roles", {})
-    ctx = RunContext(job=job, job_dir=job_dir, checkpoint=data.get("checkpoint") or {}, roles=roles)
+    cfg = load_config(job_dir.parent.parent / "config.yaml")
+    ctx = RunContext(job=job, job_dir=job_dir, checkpoint=data.get("checkpoint") or {}, cfg=cfg)
     runner = get_runner(job)
     try:
         outcome = runner.run(ctx)
