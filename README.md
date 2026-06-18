@@ -80,6 +80,46 @@ half-transferred file):
 scripts/submit.sh user@host:~/SmartRemote/inbox examples/04-slam-research.md
 ```
 
+## Models & roles
+
+SmartRemote assigns models to *roles*. The CLI writes assignments to
+`smartremote.local.yaml`, leaving your hand-edited `config.yaml` untouched.
+
+| role | default | does |
+|---|---|---|
+| `planner` | remote (Claude Code / Codex) | writes the most efficient plan |
+| `executor` | local (Ollama, e.g. Qwen3-Coder) | applies the plan |
+| `guard` | remote | checks the executor's work against the plan |
+| `escalation` | remote | takes over if the local model struggles; can propose a new local model |
+
+```bash
+smartremote models                       # roles + GPU + Ollama/remote status
+smartremote models recommend             # local models that fit a 24 GB GPU
+smartremote models pull qwen3-coder:32b  # ollama pull
+smartremote models set executor local qwen3-coder:32b
+smartremote models setup --pull qwen3-coder:32b   # recommend + pull + assign
+```
+
+Local models run on [Ollama](https://ollama.com) (`curl -fsSL https://ollama.com/install.sh | sh`).
+`smartremote models` also reports whether a CUDA GPU is visible (`nvidia-smi`).
+
+## Notifications (Hermes)
+
+Two-way notifications — completion emails and WhatsApp questions — go through a
+[Hermes Agent](https://github.com/NousResearch/hermes-agent) gateway, managed
+entirely from the CLI:
+
+```bash
+smartremote hermes setup     # generate docker-compose, configure email + WhatsApp, wire the notifier
+smartremote hermes up        # start the gateway (Docker, port 8642)
+smartremote hermes status    # health check
+smartremote hermes test      # send yourself a test message
+```
+
+`setup` asks for your email (SMTP/IMAP) and whether to enable WhatsApp. Secrets
+go to `~/.hermes/.env` (chmod 600); WhatsApp is paired by scanning a QR code from
+the gateway logs on first start.
+
 ## Layout
 
 ```

@@ -51,8 +51,11 @@ parked job survives a full restart.
 | Park/resume state machine | real (see `selftest`) |
 | Crash recovery | real |
 | Console notifier | real |
-| Hermes notifier | real HTTP client; **point it at your gateway** |
+| `models` CLI + roles (planner/executor/guard/escalation) | real |
+| Ollama integration (list / pull / recommend) | real |
+| `hermes` CLI (compose, email + WhatsApp config, up/status/test) | real (verify channel keys per Hermes version) |
+| Hermes notifier | real HTTP client; configured by `smartremote hermes setup` |
 | Hermes **inbound** (WhatsApp reply → `answers/`) | **TODO**: a small webhook |
-| Cloud runner (Claude/Codex) | **stub** with real control flow |
-| Local runner (4090 model) | **stub** |
+| Cloud runner (Claude/Codex) | **stub** — resolves the `planner` role, control flow real |
+| Local runner (Ollama) | **stub** — resolves the `executor` role |
 | autoresearch / Optuna inner loop | **not yet** (job 02) |

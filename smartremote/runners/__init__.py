@@ -38,6 +38,7 @@ class RunContext:
     job: Any
     job_dir: Path
     checkpoint: dict = field(default_factory=dict)
+    roles: dict = field(default_factory=dict)  # role -> {provider, model}; from config
 
     def __post_init__(self):
         self.questions_dir = self.job_dir / "questions"

@@ -35,10 +35,12 @@ class HermesNotifier:
     route come from your Hermes deployment; adjust the path/payload to match.
     """
 
-    def __init__(self, base_url: str, token: str | None = None, timeout: float = 10.0):
+    def __init__(self, base_url: str, token: str | None = None, timeout: float = 10.0,
+                 send_path: str = "/send"):
         self.base_url = base_url.rstrip("/")
         self.token = token
         self.timeout = timeout
+        self.send_path = "/" + send_path.lstrip("/")
 
     def send(self, *, channel: str, subject: str, body: str, job_id: str) -> None:
         if channel == "none":
@@ -48,7 +50,7 @@ class HermesNotifier:
         if self.token:
             headers["Authorization"] = f"Bearer {self.token}"
         req = urllib.request.Request(
-            f"{self.base_url}/send",
+            f"{self.base_url}{self.send_path}",
             data=json.dumps(payload).encode("utf-8"),
             headers=headers,
             method="POST",
@@ -60,5 +62,6 @@ class HermesNotifier:
 def build_notifier(cfg: dict) -> Notifier:
     h = (cfg or {}).get("hermes") or {}
     if h.get("enabled") and h.get("base_url"):
-        return HermesNotifier(h["base_url"], h.get("token") or None)
+        return HermesNotifier(h["base_url"], h.get("token") or None,
+                              send_path=h.get("send_path", "/send"))
     return ConsoleNotifier()

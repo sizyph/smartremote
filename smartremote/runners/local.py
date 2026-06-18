@@ -14,6 +14,8 @@ class LocalRunner(Runner):
     name = "local"
 
     def run(self, ctx: RunContext) -> Outcome:
+        ex = ctx.roles.get("executor") or {}
+        print(f"[local] executing with {ex.get('provider', '?')}:{ex.get('model', '?')}", flush=True)
         plan = ctx.job_dir / "artifacts" / "plan.md"
         if not plan.exists():
             raise RuntimeError(

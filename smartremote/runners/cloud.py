@@ -18,6 +18,8 @@ class CloudRunner(Runner):
     name = "cloud"
 
     def run(self, ctx: RunContext) -> Outcome:
+        planner = ctx.roles.get("planner") or {}
+        print(f"[cloud] planning with {planner.get('provider', '?')}:{planner.get('model', '?')}", flush=True)
         ctx.set_step("plan")
         draft = ctx.job_dir / "workspace" / "plan.draft.md"
         if not draft.exists():  # idempotent: survives resume replay

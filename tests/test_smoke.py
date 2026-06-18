@@ -7,8 +7,9 @@ from pathlib import Path
 
 import pytest
 
+from smartremote import models
 from smartremote import state as st
-from smartremote.config import load_config
+from smartremote.config import load_config, update_local
 from smartremote.dispatcher import Dispatcher
 from smartremote.job import JobError, parse_job
 from smartremote.selftest import run_selftest
@@ -64,3 +65,21 @@ def test_scheduler_invariants():
             except Exception:
                 p.kill()
         shutil.rmtree(tmp, ignore_errors=True)
+
+
+def test_config_overlay(tmp_path):
+    # config.yaml (human) + smartremote.local.yaml (CLI) + DEFAULTS, deep-merged.
+    (tmp_path / "config.yaml").write_text("max_parallel_cpu_jobs: 5\n", encoding="utf-8")
+    update_local(tmp_path, {"models": {"roles": {"executor": {"provider": "local", "model": "devstral:24b"}}}})
+    cfg = load_config(tmp_path / "config.yaml")
+    assert cfg["max_parallel_cpu_jobs"] == 5  # from config.yaml
+    assert cfg["models"]["roles"]["executor"]["model"] == "devstral:24b"  # from overlay
+    assert cfg["models"]["roles"]["planner"]["provider"] == "remote"  # from DEFAULTS
+    assert models.role_model(cfg, "executor") == ("local", "devstral:24b")
+
+
+def test_recommended_models_fit_24gb():
+    assert models.RECOMMENDED
+    for r in models.RECOMMENDED:
+        assert r.vram_q4_gb < 24, f"{r.tag} won't fit 24 GB"
+        assert r.role in {"planner", "executor", "guard", "escalation"}
