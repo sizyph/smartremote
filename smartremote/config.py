@@ -35,7 +35,9 @@ DEFAULTS = {
                 "codex": {"kind": "cli", "command": "codex"},
             }
         },
-        # Who does what. provider is "local" (Ollama) or a remote provider id.
+        # Cline CLI as an agentic local executor (drives an Ollama model in the workspace).
+        "cline": {"command": "cline", "args": ["-y", "--auto-approve", "true"]},
+        # Who does what. provider is "local" (Ollama), "cline" (agentic local), or a remote id.
         "roles": {
             "planner": {"provider": "remote", "model": "claude-code"},
             "executor": {"provider": "local", "model": "qwen3-coder:32b"},

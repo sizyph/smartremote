@@ -109,8 +109,8 @@ def cmd_models_pull(args) -> None:
 def cmd_models_set(args) -> None:
     if args.role not in ROLE_HELP:
         raise SystemExit(f"unknown role {args.role!r}; choose from {', '.join(ROLE_HELP)}")
-    if args.provider not in ("local", "remote"):
-        raise SystemExit("provider must be 'local' or 'remote'")
+    if args.provider not in ("local", "remote", "cline"):
+        raise SystemExit("provider must be 'local', 'remote', or 'cline'")
     cfg = _cfg(args)
     if args.provider == "remote":
         known = list((cfg["models"]["remote"]["providers"] or {}))
@@ -309,7 +309,7 @@ def main(argv=None) -> None:
     msub.add_parser("recommend", help="recommended local models for 24 GB").set_defaults(fn=cmd_models_recommend)
     sp = msub.add_parser("pull", help="ollama pull <tag>"); sp.add_argument("tag"); sp.set_defaults(fn=cmd_models_pull)
     sp = msub.add_parser("set", help="assign a model to a role")
-    sp.add_argument("role"); sp.add_argument("provider", choices=["local", "remote"]); sp.add_argument("model")
+    sp.add_argument("role"); sp.add_argument("provider", choices=["local", "remote", "cline"]); sp.add_argument("model")
     sp.set_defaults(fn=cmd_models_set)
     sp = msub.add_parser("setup", help="recommend + (optionally) pull + assign roles")
     sp.add_argument("--pull", metavar="TAG", help="ollama pull this tag and set it as executor")

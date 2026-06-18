@@ -57,7 +57,7 @@ parked job survives a full restart.
 | Hermes notifier | real HTTP client; configured by `smartremote hermes setup` |
 | Hermes **inbound** (WhatsApp reply → `answers/`) | **TODO**: a small webhook |
 | `PlanExecuteRunner`: plan→execute→guard→escalate | real — calls each role's provider |
-| Providers (Claude/Codex CLI · Ollama · mock) | real |
+| Providers (Claude/Codex CLI · Ollama · Cline agentic executor · mock) | real |
 | `CloudRunner`: research → remote report | real |
 | `ScoutRunner` (model-scout: benchmark → approve → promote) | real |
 | Eval/benchmark suite + champion/challenger ranking | real (extend tasks for sharper signal) |

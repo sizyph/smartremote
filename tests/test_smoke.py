@@ -163,3 +163,22 @@ def test_scout_runner_promotes_on_approval(tmp_path, monkeypatch):
     assert "promoted executor" in out.summary
     promoted = load_config(tmp_path / "config.yaml")["models"]["roles"]["executor"]["model"]
     assert promoted == "qwen3-coder:32b"
+
+
+def test_cline_provider_resolution(monkeypatch):
+    from smartremote import providers
+
+    monkeypatch.delenv("SMARTREMOTE_FAKE_LLM", raising=False)  # opt out of the mock net
+    cfg = load_config(None)
+    cfg["models"]["roles"]["executor"] = {"provider": "cline", "model": "qwen3-coder:32b"}
+    p = providers.provider_for_role(cfg, "executor")
+    assert isinstance(p, providers.ClineProvider)
+    assert p.model == "qwen3-coder:32b"
+
+
+def test_cline_missing_binary_errors(monkeypatch):
+    from smartremote import providers
+
+    monkeypatch.setattr(providers.shutil, "which", lambda _c: None)
+    with pytest.raises(providers.ProviderError):
+        providers.ClineProvider("qwen3-coder:32b", "http://127.0.0.1:11434", {}).complete("do X")

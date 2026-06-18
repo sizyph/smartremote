@@ -96,7 +96,8 @@ SmartRemote assigns models to *roles*. The CLI writes assignments to
 smartremote models                       # roles + GPU + Ollama/remote status
 smartremote models recommend             # local models that fit a 24 GB GPU
 smartremote models pull qwen3-coder:32b  # ollama pull
-smartremote models set executor local qwen3-coder:32b
+smartremote models set executor local qwen3-coder:32b   # plain Ollama completion
+smartremote models set executor cline qwen3-coder:32b   # agentic: Cline drives the local model
 smartremote models setup --pull qwen3-coder:32b   # recommend + pull + assign
 
 smartremote models bench                 # benchmark local models on the eval suite
@@ -109,6 +110,12 @@ The **model-scout job** ([examples/05-model-scout.md](examples/05-model-scout.md
 (quality + tok/s + GPU-fit) and asks you over WhatsApp — via Hermes — before
 promoting a new `executor`. Schedule it to keep the local model current as new
 releases land.
+
+**Executor: completion vs agent.** `local` runs the model as a single Ollama
+completion (it *describes* the work). `cline` runs [Cline](https://cline.bot)
+headless to drive that same local model *agentically* — editing files and running
+commands in the job workspace — so it actually *does* the work. Either way the
+remote `guard` then checks the result against the plan.
 
 Local models run on [Ollama](https://ollama.com) (`curl -fsSL https://ollama.com/install.sh | sh`).
 `smartremote models` also reports whether a CUDA GPU is visible (`nvidia-smi`).

@@ -82,6 +82,45 @@ class OllamaProvider:
         return self.generate(prompt, system).get("response", "").strip()
 
 
+class ClineProvider:
+    """Cline CLI (headless) driving a LOCAL Ollama model — an *agentic* executor that
+    edits files and runs commands in the job workspace, not just text generation.
+
+    Invocation: `cline -y --auto-approve true -P ollama -m <model>` with the prompt on
+    stdin and cwd=workspace; the Ollama endpoint is passed as OLLAMA_HOST. Verify the
+    flags against `cline --help` for your version, or override models.cline.{command,args}.
+    (`ollama launch cline` is the simplest way to pre-wire the provider + endpoint.)
+    """
+
+    def __init__(self, model: str, ollama_base_url: str, ccfg: dict):
+        self.model = model
+        self.base_url = ollama_base_url
+        self.command = (ccfg or {}).get("command", "cline")
+        self.args = (ccfg or {}).get("args", ["-y", "--auto-approve", "true"])
+
+    def complete(self, prompt: str, *, system: str | None = None, workspace=None) -> str:
+        if not shutil.which(self.command):
+            raise ProviderError(
+                f"Cline CLI '{self.command}' not on PATH. Install it (`npm i -g cline`, then "
+                "`cline auth` or `ollama launch cline`), or reassign the executor role.")
+        text = f"{system}\n\n{prompt}" if system else prompt
+        argv = [self.command, *self.args]
+        if self.model:
+            argv += ["-P", "ollama", "-m", self.model]
+        env = dict(os.environ)
+        if self.base_url:
+            env.setdefault("OLLAMA_HOST", self.base_url.split("://")[-1])  # host:port
+        try:
+            out = subprocess.run(argv, input=text, capture_output=True, text=True,
+                                 cwd=str(workspace) if workspace else None,
+                                 timeout=REMOTE_TIMEOUT, env=env)
+        except subprocess.TimeoutExpired as e:
+            raise ProviderError(f"cline timed out after {REMOTE_TIMEOUT}s") from e
+        if out.returncode != 0:
+            raise ProviderError(f"cline exited {out.returncode}: {out.stderr.strip()[:500]}")
+        return out.stdout.strip()
+
+
 class MockProvider:
     """Deterministic, offline; varies by role so the pipeline produces sensible text."""
 
@@ -114,6 +153,10 @@ def provider_for_role(cfg: dict, role: str):
     if provider == "local":
         base = cfg.get("models", {}).get("local", {}).get("base_url", "http://127.0.0.1:11434")
         return OllamaProvider(model, base)
+    if provider == "cline":
+        mcfg = cfg.get("models", {})
+        base = mcfg.get("local", {}).get("base_url", "http://127.0.0.1:11434")
+        return ClineProvider(model, base, mcfg.get("cline", {}))
     if provider == "remote":
         providers = cfg.get("models", {}).get("remote", {}).get("providers", {}) or {}
         return RemoteCliProvider(model, providers.get(model, {}))
