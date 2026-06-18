@@ -149,6 +149,26 @@ smartremote hermes test      # send yourself a test message
 go to `~/.hermes/.env` (chmod 600); WhatsApp is paired by scanning a QR code from
 the gateway logs on first start.
 
+## Publishing results
+
+When a job finishes, its artifacts can be published and the links delivered in the
+completion message. Pick a backend in `config.yaml` under `publish:`:
+
+| backend | what it does | where |
+|---|---|---|
+| `local` (default) | nothing pushed | stays on the server; pull with rsync/sftp |
+| `git` | commits artifacts | a **private** results repo (a local clone) |
+| `rclone` | uploads artifacts | Drive / S3 / … via an rclone remote |
+| `auto` | size-routed | small → git, large (> `size_threshold_mb`) → rclone |
+
+```bash
+smartremote publish 02-automl-hpo     # publish one finished job by hand
+```
+
+Use a **separate private** repo for results — never this public tool repo. The git
+side's `PUBLISHED.md` indexes everything, including links to the large `rclone`
+blobs, so one URL reaches it all. `smartremote doctor` checks the backend is ready.
+
 ## Layout
 
 ```

@@ -126,7 +126,7 @@ class Dispatcher:
             elif rc == 0:
                 self.notifier.send(
                     channel=_chan(data, "on_done"), subject=f"[done] {jid}",
-                    body=_result_body(data), job_id=jid,
+                    body=_result_body(data) + self._publish(jid, job_dir), job_id=jid,
                 )
                 self.log(f"{jid} done")
             else:
@@ -148,6 +148,22 @@ class Dispatcher:
             job_id=jid,
         )
         self.log(f"{jid} parked on {qid}")
+
+    def _publish(self, jid: str, job_dir: Path) -> str:
+        """Publish artifacts per config; return a links block for the notification."""
+        if (self.cfg.get("publish") or {}).get("backend", "local") == "local":
+            return ""
+        try:
+            from .publish import publish_job
+
+            pubs = publish_job(self.cfg, jid, job_dir)
+        except Exception as e:  # noqa: BLE001
+            self.log(f"{jid} publish error: {e}")
+            return f"\n\n(publish failed: {e})"
+        if not pubs:
+            return ""
+        self.log(f"{jid} published {len(pubs)} artifact(s)")
+        return "\n\nPublished:\n" + "\n".join(f"  {p.name}: {p.url}" for p in pubs)
 
     # ---- schedule -----------------------------------------------------
     def schedule(self) -> None:

@@ -70,6 +70,27 @@ def run_checks(cfg: dict, root: Path) -> list[Check]:
     else:
         checks.append(Check("Notifications", "Hermes", WARN, "not configured",
                             "smartremote hermes setup   (email + WhatsApp; optional but recommended)"))
+
+    # --- Publishing ---
+    pcfg = cfg.get("publish", {}) or {}
+    backend = pcfg.get("backend", "local")
+    if backend == "local":
+        checks.append(Check("Publishing", "results", INFO, "local — pull with rsync/sftp",
+                            "set publish.backend to git/rclone/auto to push results + get links"))
+    else:
+        if backend in ("git", "auto"):
+            repo = (pcfg.get("git", {}) or {}).get("repo_dir", "")
+            ok = bool(repo and (Path(repo).expanduser() / ".git").exists())
+            checks.append(Check("Publishing", "git results repo", OK if ok else FAIL,
+                                repo or "publish.git.repo_dir not set",
+                                "" if ok else "git clone your PRIVATE results repo and set publish.git.repo_dir"))
+        if backend in ("rclone", "auto"):
+            have = shutil.which("rclone") is not None
+            remote = (pcfg.get("rclone", {}) or {}).get("remote", "")
+            ok = have and bool(remote)
+            detail = (remote or "no remote set") + ("" if have else " · rclone not installed")
+            checks.append(Check("Publishing", "rclone", OK if ok else FAIL, detail,
+                                "" if ok else "install rclone + set publish.rclone.remote (e.g. gdrive:smartremote-results)"))
     return checks
 
 

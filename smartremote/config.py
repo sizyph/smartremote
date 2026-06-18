@@ -45,6 +45,12 @@ DEFAULTS = {
             "escalation": {"provider": "remote", "model": "codex"},
         },
     },
+    "publish": {
+        "backend": "local",       # local | git | rclone | auto
+        "size_threshold_mb": 25,  # auto: files <= this go to git, larger to rclone
+        "git": {"repo_dir": "", "remote": "", "branch": "main", "push": True},
+        "rclone": {"remote": "", "link": True},
+    },
 }
 
 ROLE_HELP = {

@@ -56,6 +56,7 @@ parked job survives a full restart.
 | `hermes` CLI (compose, email + WhatsApp config, up/status/test) | real (verify channel keys per Hermes version) |
 | Hermes notifier | real HTTP client; configured by `smartremote hermes setup` |
 | Hermes **inbound** (WhatsApp reply → `answers/`) | **TODO**: a small webhook |
+| Publish step: results → git (private repo) / rclone (Drive/S3) / local; links via Hermes | real |
 | `PlanExecuteRunner`: plan→execute→guard→escalate | real — calls each role's provider |
 | Providers (Claude/Codex CLI · Ollama · Cline agentic executor · mock) | real |
 | `CloudRunner`: research → remote report | real |

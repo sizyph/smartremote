@@ -201,3 +201,56 @@ def test_doctor_reports_gaps_and_fixes(monkeypatch, tmp_path):
     assert planner.status == doctor.WARN  # remote claude not on PATH
     assert by_name["Hermes"].status == doctor.WARN  # disabled by default
     assert doctor.next_step(checks)  # always offers a prioritized fix
+
+
+def test_publish_local_is_noop(tmp_path):
+    from smartremote.publish import publish_job
+
+    (tmp_path / "artifacts").mkdir()
+    (tmp_path / "artifacts" / "plan.md").write_text("x", encoding="utf-8")
+    assert publish_job(load_config(None), "j1", tmp_path) == []  # backend defaults to local
+
+
+def test_publish_git_commits(tmp_path):
+    from smartremote import publish as pub
+
+    repo = tmp_path / "results"
+    repo.mkdir()
+    pub._git(repo, "init", "-b", "main")
+    jobdir = tmp_path / "job"
+    (jobdir / "artifacts").mkdir(parents=True)
+    (jobdir / "artifacts" / "report.md").write_text("hello", encoding="utf-8")
+
+    cfg = load_config(None)
+    cfg["publish"] = {"backend": "git", "size_threshold_mb": 25,
+                      "git": {"repo_dir": str(repo), "remote": "", "branch": "main", "push": False},
+                      "rclone": {"remote": "", "link": True}}
+    out = pub.publish_job(cfg, "j2", jobdir)
+    assert any(p.where == "git" and p.name == "report.md" for p in out)
+    assert (repo / "j2" / "report.md").read_text(encoding="utf-8") == "hello"
+    assert (repo / "j2" / "PUBLISHED.md").exists()
+    assert "results: j2" in pub._git(repo, "log", "--oneline")
+
+
+def test_publish_auto_routes_large_to_rclone(tmp_path, monkeypatch):
+    from smartremote import publish as pub
+
+    # rclone absent -> the large file routes there and is recorded as an error, not a crash
+    monkeypatch.setattr(pub.shutil, "which", lambda c: None if c == "rclone" else f"/usr/bin/{c}")
+    repo = tmp_path / "results"
+    repo.mkdir()
+    pub._git(repo, "init", "-b", "main")
+    jobdir = tmp_path / "job"
+    (jobdir / "artifacts").mkdir(parents=True)
+    (jobdir / "artifacts" / "small.md").write_text("tiny", encoding="utf-8")
+    (jobdir / "artifacts" / "big.bin").write_bytes(b"0" * 2_000_000)
+
+    cfg = load_config(None)
+    cfg["publish"] = {"backend": "auto", "size_threshold_mb": 1,
+                      "git": {"repo_dir": str(repo), "remote": "", "branch": "main", "push": False},
+                      "rclone": {"remote": "gdrive:x", "link": False}}
+    out = pub.publish_job(cfg, "j3", jobdir)
+    assert any(p.where == "git" and p.name == "small.md" for p in out)
+    assert any(p.where == "error" for p in out)  # rclone missing
+    assert (repo / "j3" / "small.md").exists()
+    assert not (repo / "j3" / "big.bin").exists()  # large file did not go to git

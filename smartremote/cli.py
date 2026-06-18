@@ -66,6 +66,17 @@ def cmd_answer(args) -> None:
     print(f"answer recorded for {args.job}/{args.qid}; the dispatcher will resume it")
 
 
+def cmd_publish(args) -> None:
+    from .publish import publish_job
+
+    pubs = publish_job(_cfg(args), args.job, _root(args) / "jobs" / args.job)
+    if not pubs:
+        print("nothing published — set publish.backend to git/rclone/auto (it is 'local' by default)")
+        return
+    for p in pubs:
+        print(f"{p.where:7} {p.name}: {p.url}")
+
+
 def cmd_selftest(args) -> None:
     from .selftest import run_selftest
 
@@ -349,6 +360,9 @@ def main(argv=None) -> None:
     sp = sub.add_parser("answer", help="record a human answer to a parked job")
     sp.add_argument("job"); sp.add_argument("qid"); sp.add_argument("text")
     sp.set_defaults(fn=cmd_answer)
+    sp = sub.add_parser("publish", help="publish a finished job's artifacts (git/rclone)")
+    sp.add_argument("job")
+    sp.set_defaults(fn=cmd_publish)
     sub.add_parser("selftest", help="hermetic park/resume test").set_defaults(fn=cmd_selftest)
     sub.add_parser("setup", help="guided first-time setup (config, models, notifications)").set_defaults(fn=cmd_setup)
     sub.add_parser("doctor", help="diagnose config + dependencies; show what to fix").set_defaults(fn=cmd_doctor)
